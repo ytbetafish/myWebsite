@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,8 +24,10 @@
 
         body {
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background-color: #f8f9fa; /* 极浅灰色背景 */
-            color: #333333; /* 深灰色文字 */
+            background-color: #f8f9fa;
+            /* 极浅灰色背景 */
+            color: #333333;
+            /* 深灰色文字 */
             line-height: 1.6;
             display: flex;
             flex-direction: column;
@@ -79,7 +82,8 @@
             border-radius: 4px;
         }
 
-        .nav-menu li a:hover, .nav-menu li a.active {
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
             color: #4A90D9;
             background-color: #f0f7ff;
         }
@@ -107,7 +111,8 @@
         }
 
         /* 深色模式全局样式 */
-        html.dark-mode, html.dark-mode body {
+        html.dark-mode,
+        html.dark-mode body {
             background-color: #121212;
             color: #e0e0e0;
         }
@@ -137,7 +142,8 @@
             color: #e0e0e0;
         }
 
-        html.dark-mode .nav-menu li a:hover, html.dark-mode .nav-menu li a.active {
+        html.dark-mode .nav-menu li a:hover,
+        html.dark-mode .nav-menu li a.active {
             color: #4A90D9;
             background-color: rgba(74, 144, 217, 0.1);
         }
@@ -146,7 +152,8 @@
             color: #ffffff;
         }
 
-        html.dark-mode .tagline, html.dark-mode .about-text {
+        html.dark-mode .tagline,
+        html.dark-mode .about-text {
             color: #cccccc;
         }
 
@@ -333,11 +340,11 @@
             .profile-card {
                 padding: 30px 20px;
             }
-            
+
             .nickname {
                 font-size: 1.5rem;
             }
-            
+
             .nav-container {
                 padding: 0 15px;
             }
@@ -402,7 +409,7 @@
     </style>
     <!-- 提前应用深色模式，避免刷新时闪烁（FOUC） -->
     <script>
-        (function() {
+        (function () {
             let darkModePref = localStorage.getItem('darkMode');
             if (darkModePref === null) {
                 darkModePref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'enabled' : 'disabled';
@@ -414,6 +421,7 @@
         })();
     </script>
 </head>
+
 <body>
     <!-- 顶部导航栏 -->
     <header>
@@ -480,18 +488,29 @@
     <!-- 页脚 -->
     <footer>
         <p>&copy; 6202 YT_betafish. All lefts reserved.</p>
+            <a href="https://jigsaw.w3.org/css-validator/check/referer">
+                <img style="border:0;width:88px;height:31px" src="https://jigsaw.w3.org/css-validator/images/vcss-blue"
+                    alt="Valid CSS!" />
+            </a>
+
+            <a href="https://validator.w3.org/check/referer">
+                <img src="https://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01!" height="31" width="88" />
+            </a>
+            
+            <img src="https://img.shields.io/badge/JavaScript-Verified-blue" alt="JS">
+
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const emailWrapper = document.getElementById('emailWrapper');
             const emailBtn = document.getElementById('emailBtn');
             const emailTooltip = document.getElementById('emailTooltip');
             const darkModeBtn = document.getElementById('darkModeBtn');
             const darkIcon = darkModeBtn.querySelector('i');
-            
+
             // 点击邮箱按钮显示/隐藏提示框，同时复制邮箱到剪贴板
-            emailBtn.addEventListener('click', async function(e) {
+            emailBtn.addEventListener('click', async function (e) {
                 e.stopPropagation(); // 防止冒泡
                 emailWrapper.classList.toggle('show-tooltip');
                 // 新增的复制邮箱逻辑
@@ -519,7 +538,7 @@
             });
 
             // 点击页面其他地方关闭提示框
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!emailWrapper.contains(e.target)) {
                     emailWrapper.classList.remove('show-tooltip');
                 }
@@ -532,7 +551,7 @@
                 darkIcon.classList.add('fa-sun');
             }
 
-            darkModeBtn.addEventListener('click', function() {
+            darkModeBtn.addEventListener('click', function () {
                 document.documentElement.classList.toggle('dark-mode');
                 const isDark = document.documentElement.classList.contains('dark-mode');
                 localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
@@ -548,4 +567,5 @@
         });
     </script>
 </body>
+
 </html>
