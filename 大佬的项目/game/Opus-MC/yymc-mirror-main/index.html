@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0f0c">
+<meta name="description" content="YYMC 横屏版 · 本地镜像">
+<title>YYMC 横屏版</title>
+<link rel="icon" href="favicon.svg">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0b0f0c;
+    overflow: hidden;
+    overscroll-behavior: none;
+    font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+  }
+
+  /* ===== 游戏舞台 ===== */
+  #stage {
+    position: fixed;
+    inset: 0;
+    background: #000;
+  }
+  #stage iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  /* 竖屏 + 强制横屏：把舞台旋转 90° 铺满 */
+  body.force-landscape #stage {
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    top: 50%;
+    width: 100vh;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+  }
+
+  /* ===== 加载遮罩（镜像额外加的：50MB 单文件首帧较慢） ===== */
+  #boot {
+    position: fixed; inset: 0; z-index: 2147483645;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    background: #0b0f0c; color: #93a08d;
+    transition: opacity .45s;
+  }
+  #boot.done { opacity: 0; pointer-events: none; }
+  #boot .spin {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid rgba(91,140,58,.25);
+    border-top-color: #5b8c3a;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #boot p { font-size: 14px; letter-spacing: .02em; }
+  #boot small { font-size: 12px; color: #5d6a58; }
+
+  /* ===== 竖屏旋转提示遮罩 ===== */
+  #rotate-tip {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483646;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px;
+    background: #0b0f0c;
+    color: #e8efe5;
+    text-align: center;
+  }
+  body.landscape #rotate-tip,
+  body.force-landscape #rotate-tip { display: none; }
+
+  .rotate-icon {
+    width: 64px; height: 64px;
+    color: #5b8c3a;
+    animation: nudge 1.6s ease-in-out infinite;
+  }
+  @keyframes nudge {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(90deg); }
+  }
+  #rotate-tip h1 { font-size: 20px; font-weight: 700; letter-spacing: .04em; }
+  #rotate-tip p { font-size: 14px; color: #93a08d; line-height: 1.7; max-width: 280px; }
+
+  .tip-actions { display: flex; flex-direction: column; gap: 12px; width: 220px; }
+  .tip-actions button {
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 239, 229, .25);
+    background: transparent;
+    color: #e8efe5;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .tip-actions button.primary {
+    background: #5b8c3a;
+    border-color: #5b8c3a;
+    color: #0b0f0c;
+    font-weight: 700;
+  }
+
+  /* ===== 悬浮工具条 ===== */
+  #bar {
+    position: fixed;
+    left: 50%;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 2147483647;
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(10, 14, 10, .82);
+    border: 1px solid rgba(232, 239, 229, .22);
+    transition: opacity .4s, transform .4s;
+  }
+  #bar.hide { opacity: 0; transform: translateX(-50%) translateY(12px); pointer-events: none; }
+  #bar button {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 239, 229, .25);
+    background: transparent;
+    color: #e8efe5;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #bar button.primary {
+    background: #5b8c3a;
+    border-color: #5b8c3a;
+    color: #0b0f0c;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <iframe id="game" title="YYMC 游戏" allow="fullscreen; autoplay; gamepad; microphone; camera"
+      allowfullscreen></iframe>
+  </div>
+
+  <div id="boot">
+    <div class="spin"></div>
+    <p>正在加载游戏本体（约 48 MB 单文件）</p>
+    <small>首次打开会慢一些，之后就吃缓存了</small>
+  </div>
+
+  <div id="rotate-tip">
+    <svg class="rotate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="2.5" width="10" height="19" rx="2"/>
+      <path d="M21 12a9 9 0 1 1-3-6.7"/>
+      <path d="M18 3.5v3h-3"/>
+    </svg>
+    <h1>请横屏游玩</h1>
+    <p>本游戏为横屏体验，请将手机旋转至横屏；也可以直接在当前竖屏强制横屏显示。</p>
+    <div class="tip-actions">
+      <button class="primary" id="btn-force">强制横屏显示</button>
+      <button id="btn-portrait">保持竖屏继续</button>
+    </div>
+  </div>
+
+  <div id="bar" class="hide">
+    <button class="primary" id="btn-full">全屏</button>
+    <button id="btn-lock">锁定横屏</button>
+    <button id="btn-reload">重载</button>
+  </div>
+
+<script>
+  // ---- 本地镜像：游戏本体在 ./game/ ----
+  // 原站此处的 iframe 指向 https://4mhm3sdsmh4v7.doubao.link/app/app_17j9fnmn4mj
+  // v2 = 62.9 MB（默认）：区块 worker 与音效事件表都内联了，地形多线程生成，不卡
+  // v1 = 50.1 MB（留档）：区块 worker 缺失，退回主线程网格化，掉帧明显
+  //   ?v=1     用 v1
+  //   ?rooms=1 走同源 /rooms 反代的联机版（serve.mjs 提供）
+  // GitHub Pages 版：只有 v2 本体 + 音效（纯静态，没有 /rooms 反代）
+  var GAME_URL = "game/OpusMC.v2.html";
+  var iframe = document.getElementById("game");
+  var bar = document.getElementById("bar");
+  var boot = document.getElementById("boot");
+  var forceLandscape = false;
+
+  function isLandscape() {
+    return window.innerWidth >= window.innerHeight;
+  }
+
+  function applyLayout() {
+    var land = isLandscape();
+    document.body.classList.toggle("landscape", land);
+    document.body.classList.toggle("force-landscape", forceLandscape && !land);
+  }
+
+  function loadGame() {
+    boot.classList.remove("done");
+    iframe.src = GAME_URL;
+  }
+
+  // 方向 / 尺寸变化时重新布局
+  window.addEventListener("resize", applyLayout);
+  window.addEventListener("orientationchange", function () {
+    setTimeout(applyLayout, 200);
+  });
+
+  // 强制横屏（CSS 旋转铺满）
+  document.getElementById("btn-force").addEventListener("click", function () {
+    forceLandscape = true;
+    applyLayout();
+    enterFullscreen();
+  });
+
+  // 保持竖屏
+  document.getElementById("btn-portrait").addEventListener("click", function () {
+    forceLandscape = false;
+    applyLayout();
+  });
+
+  function enterFullscreen() {
+    var el = document.documentElement;
+    var req = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen;
+    if (req) { try { req.call(el); } catch (e) {} }
+    if (screen.orientation && screen.orientation.lock) {
+      try { screen.orientation.lock("landscape").catch(function () {}); } catch (e) {}
+    }
+  }
+
+  document.getElementById("btn-full").addEventListener("click", enterFullscreen);
+
+  document.getElementById("btn-lock").addEventListener("click", function () {
+    forceLandscape = true;
+    applyLayout();
+    enterFullscreen();
+  });
+
+  document.getElementById("btn-reload").addEventListener("click", function () {
+    loadGame();
+  });
+
+  // 双击屏幕呼出 / 隐藏工具条
+  var taps = 0;
+  function toggleBar() { bar.classList.toggle("hide"); }
+  document.addEventListener("touchstart", function () {
+    taps++;
+    setTimeout(function () { taps = 0; }, 600);
+    if (taps >= 2) { toggleBar(); taps = 0; }
+  }, { passive: true });
+  document.addEventListener("dblclick", toggleBar);
+
+  // iframe 首帧就绪后收起加载遮罩（跨源不安全时靠超时兜底）
+  iframe.addEventListener("load", function () {
+    setTimeout(function () { boot.classList.add("done"); }, 400);
+  });
+  setTimeout(function () { boot.classList.add("done"); }, 20000);
+
+  // 工具条几秒后自动隐藏，双击任意处呼出
+  setTimeout(function () { bar.classList.add("hide"); }, 4000);
+
+  applyLayout();
+  loadGame();
+</script>
+</body>
+</html>

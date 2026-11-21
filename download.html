@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载 - YT_betafish</title>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 全局重置与基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* 强制保留滚动条空间，避免页面切换时按钮被滚动条挤位 */
+        html {
+            overflow-y: scroll;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+            color: #333333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* 顶部导航栏 */
+        header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #4A90D9;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-menu li a {
+            color: #555;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+
+        .nav-menu li a:hover, .nav-menu li a.active {
+            color: #4A90D9;
+            background-color: #f0f7ff;
+        }
+
+        /* 深色模式切换按钮样式 */
+        .dark-mode-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #f0f7ff;
+            color: #4A90D9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode-btn:hover {
+            background-color: #4A90D9;
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        /* 深色模式全局样式 */
+        html.dark-mode, html.dark-mode body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        html.dark-mode header {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+        }
+
+        html.dark-mode footer {
+            background-color: #1e1e1e;
+            border-top-color: #2d2d2d;
+            color: #a0a0a0;
+        }
+
+        html.dark-mode .nav-menu li a {
+            color: #e0e0e0;
+        }
+
+        html.dark-mode .nav-menu li a:hover, html.dark-mode .nav-menu li a.active {
+            color: #4A90D9;
+            background-color: rgba(74, 144, 217, 0.1);
+        }
+
+        html.dark-mode .dark-mode-btn {
+            background-color: rgba(74, 144, 217, 0.2);
+            color: #4A90D9;
+        }
+
+        html.dark-mode .dark-mode-btn:hover {
+            background-color: #4A90D9;
+            color: #ffffff;
+        }
+
+        /* 主要内容区域 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        /* 下载展示栏目 */
+        .works-section {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 40px 30px;
+        }
+
+        .works-section h2 {
+            font-size: 1.5rem;
+            color: #4A90D9;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* 下载卡片网格 - 自动响应式 */
+        .works-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .work-card {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px 20px;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .work-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(74, 144, 217, 0.15);
+            border-color: #4A90D9;
+        }
+
+        .work-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background-color: #d6eaff;
+            color: #4A90D9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+
+        .work-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .work-desc {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            flex: 1;
+            margin-bottom: 16px;
+        }
+
+        .work-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #999;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .work-link {
+            color: #4A90D9;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .work-link:hover {
+            text-decoration: underline;
+        }
+
+        /* 深色模式适配 */
+        html.dark-mode .works-section {
+            background-color: #1e1e1e;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08);
+        }
+
+        html.dark-mode .work-card {
+            background-color: #2d2d2d;
+            border-color: #3a3a3a;
+        }
+
+        html.dark-mode .work-card:hover {
+            box-shadow: 0 8px 20px rgba(74, 144, 217, 0.25);
+            border-color: #4A90D9;
+        }
+
+        html.dark-mode .work-icon {
+            background-color: rgba(74, 144, 217, 0.15);
+        }
+
+        html.dark-mode .work-title {
+            color: #ffffff;
+        }
+
+        html.dark-mode .work-desc {
+            color: #cccccc;
+        }
+
+        html.dark-mode .work-meta {
+            color: #888;
+            border-top-color: #3a3a3a;
+        }
+
+        /* 页脚 */
+        footer {
+            background-color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #888;
+            border-top: 1px solid #eee;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 600px) {
+            .works-section {
+                padding: 30px 20px;
+            }
+
+            .works-section h2 {
+                font-size: 1.3rem;
+            }
+
+            .nav-container {
+                padding: 0 15px;
+            }
+        }
+
+        /* 极窄屏（360px以下，如 iPhone SE）适配 */
+        @media (max-width: 360px) {
+            .works-section {
+                padding: 25px 15px;
+            }
+
+            .works-section h2 {
+                font-size: 1.15rem;
+            }
+
+            .works-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .work-card {
+                padding: 20px 16px;
+            }
+
+            .nav-menu li a {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+            }
+
+            .nav-menu {
+                gap: 5px;
+            }
+
+            .logo {
+                font-size: 1rem;
+            }
+
+            .dark-mode-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    <!-- 提前应用深色模式，避免刷新时闪烁（FOUC） -->
+    <script>
+        (function() {
+            let darkModePref = localStorage.getItem('darkMode');
+            if (darkModePref === null) {
+                darkModePref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'enabled' : 'disabled';
+                localStorage.setItem('darkMode', darkModePref);
+            }
+            if (darkModePref === 'enabled') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">YT_betafish</div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="logs.html">日志</a></li>
+                    <li><a href="download.html" class="active">下载</a></li>
+                    <li><a href="works.html" >作品</a></li>
+                    <li>
+                        <button class="dark-mode-btn" id="darkModeBtn" title="切换深色模式">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main>
+        <section class="works-section">
+            <h2>电教委专用</h2>
+            <div class="works-grid">
+                <!-- 下载卡片：个人主页 -->
+                <div class="work-card">
+                    <div class="work-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="work-title">MemReduct</h3>
+                    <p class="work-desc">一款轻量级内存清理工具,启动速度快、占用资源极少。它能有效释放系统多余内存,清 理后台进程占用的RAM资源,特别适合内存较小的老旧电脑提升运行速度。</p>
+                    <div class="work-meta">
+                        <span>下载</span>
+                        <a href="https://github.com/henrypp/memreduct/releases/download/v.3.5.2/memreduct-3.5.2-setup.exe" class="work-link">
+                            访问 <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    </div>
+                    <div class="work-card">
+                    <div class="work-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="work-title">Geek Uninstaller</h3>
+                    <p class="work-desc">一款口碑极佳的Windows 深度卸载闭源工具,采用单文件绿色版设计,无需安装即可使用。它先调用软件自带卸载程序,完成后自动扫描并清理残留的文件、文件夹和注册表项,支持强制卸载顽固软件。</p>
+                    <div class="work-meta">
+                        <span>下载</span>
+                        <a href="https://geekuninstaller.com/geek.zip" class="work-link">
+                            访问 <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    </div>
+                    <div class="work-card">
+                    <div class="work-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="work-title">ClassIsland</h3>
+                    <p class="work-desc">一款专为教室多媒体大屏和学生电脑设计的桌面课表工具。它以悬浮窗形式显示在屏幕边缘,支持课程倒计时、上下课提醒和自动切换课程,帮助师生直观掌握课程进度。</p>
+                    <div class="work-meta">
+                        <span>下载</span>
+                        <a href="https://github.com/ClassIsland/ClassIsland/releases/download/2.1.0.1/ClassIsland_app_windows_x64_selfContained_folder.zip" class="work-link">
+                            访问 <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    </div>
+                <!-- 后续可在此添加更多下载卡片 -->
+            
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 6202 YT_betafish. All lefts reserved.</p>
+            <a href="https://jigsaw.w3.org/css-validator/check/referer">
+                <img style="border:0;width:88px;height:31px" src="https://jigsaw.w3.org/css-validator/images/vcss-blue"
+                    alt="Valid CSS!" />
+            </a>
+
+            <a href="https://validator.w3.org/check/referer">
+                <img src="https://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01!" height="31" width="88" />
+            </a>
+            
+            <img src="https://img.shields.io/badge/JavaScript-Verified-blue" alt="JS">
+
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeBtn = document.getElementById('darkModeBtn');
+            const darkIcon = darkModeBtn.querySelector('i');
+
+            // 深色模式切换逻辑
+            // 根据已应用的深色模式状态同步图标
+            if (document.documentElement.classList.contains('dark-mode')) {
+                darkIcon.classList.remove('fa-moon');
+                darkIcon.classList.add('fa-sun');
+            }
+
+            darkModeBtn.addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark-mode');
+                const isDark = document.documentElement.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+                // 切换图标
+                if (isDark) {
+                    darkIcon.classList.remove('fa-moon');
+                    darkIcon.classList.add('fa-sun');
+                } else {
+                    darkIcon.classList.remove('fa-sun');
+                    darkIcon.classList.add('fa-moon');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

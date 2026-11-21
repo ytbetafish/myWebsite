@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -96,7 +97,8 @@
         }
 
         /* 深色模式全局样式 */
-        html.dark-mode, html.dark-mode body {
+        html.dark-mode,
+        html.dark-mode body {
             background-color: #121212;
             color: #e0e0e0;
         }
@@ -328,7 +330,7 @@
     </style>
     <!-- 提前应用深色模式，避免刷新时闪烁（FOUC） -->
     <script>
-        (function() {
+        (function () {
             let darkModePref = localStorage.getItem('darkMode');
             if (darkModePref === null) {
                 darkModePref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'enabled' : 'disabled';
@@ -340,6 +342,7 @@
         })();
     </script>
 </head>
+
 <body>
     <!-- 顶部导航栏 -->
     <header>
@@ -349,6 +352,7 @@
                 <ul class="nav-menu">
                     <li><a href="index.html">首页</a></li>
                     <li><a href="logs.html">日志</a></li>
+                    <li><a href="download.html">下载</a></li>
                     <li><a href="works.html">作品</a></li>
                     <li>
                         <button class="dark-mode-btn" id="darkModeBtn" title="切换深色模式">
@@ -365,17 +369,18 @@
         <div class="error-card">
             <div class="error-icon">
                 <svg class="compass" id="compass" viewBox="0 0 100 100" width="80" height="80">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2"/>
-                    <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
-                    <text x="50" y="14" text-anchor="middle" font-size="9" fill="currentColor" font-weight="bold">N</text>
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" />
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3" />
+                    <text x="50" y="14" text-anchor="middle" font-size="9" fill="currentColor"
+                        font-weight="bold">N</text>
                     <text x="89" y="54" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.6">E</text>
                     <text x="50" y="95" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.6">S</text>
                     <text x="11" y="54" text-anchor="middle" font-size="8" fill="currentColor" opacity="0.6">W</text>
                     <g class="compass-needle" id="compassNeedle">
-                        <polygon points="50,18 45,50 55,50" fill="#e74c3c"/>
-                        <polygon points="50,82 45,50 55,50" fill="#bdc3c7"/>
+                        <polygon points="50,18 45,50 55,50" fill="#e74c3c" />
+                        <polygon points="50,82 45,50 55,50" fill="#bdc3c7" />
                     </g>
-                    <circle cx="50" cy="50" r="3" fill="currentColor"/>
+                    <circle cx="50" cy="50" r="3" fill="currentColor" />
                 </svg>
             </div>
             <div class="error-code">404</div>
@@ -385,28 +390,32 @@
                 <i class="fas fa-home"></i>
                 返回首页
             </a>
-            <p class="countdown-text"><span id="countdown">5</span> 秒后自动返回首页，<a href="#" id="cancelRedirect">取消跳转</a></p>
+            <p class="countdown-text"><span id="countdown">5</span> 秒后自动返回首页，<a href="#" id="cancelRedirect">取消跳转</a>
+            </p>
         </div>
     </main>
 
     <!-- 页脚 -->
     <footer>
         <p>&copy; 6202 YT_betafish. All lefts reserved.</p>
-            <a href="https://jigsaw.w3.org/css-validator/check/referer">
-                <img style="border:0;width:88px;height:31px" src="https://jigsaw.w3.org/css-validator/images/vcss-blue"
-                    alt="Valid CSS!" />
-            </a>
+        <a href="https://jigsaw.w3.org/css-validator/check/referer">
+            <img style="border:0;width:88px;height:31px" src="https://jigsaw.w3.org/css-validator/images/vcss-blue"
+                alt="Valid CSS!" />
+        </a>
 
-            <a href="https://validator.w3.org/check/referer">
-                <img src="https://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01!" height="31" width="88" />
-            </a>
-            
-            <img src="https://img.shields.io/badge/JavaScript-Verified-blue" alt="JS">
+        <a href="https://validator.w3.org/check/referer">
+            <img src="https://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01!" height="31" width="88" />
+        </a>
+
+        <a href="https://cloudflare.com"><img src="https://workers.cloudflare.com/built-with-cloudflare.svg"
+                alt="Built with Cloudflare" /></a>
+        <a href="https://www.cloudflare.com"><img style="height: 45px;" src="cloudflare-web-badge.png"
+                alt="Powered by Cloudflare" /></a>
 
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const darkModeBtn = document.getElementById('darkModeBtn');
             const darkIcon = darkModeBtn.querySelector('i');
 
@@ -417,7 +426,7 @@
             }
 
             // 深色模式切换
-            darkModeBtn.addEventListener('click', function() {
+            darkModeBtn.addEventListener('click', function () {
                 document.documentElement.classList.toggle('dark-mode');
                 if (document.documentElement.classList.contains('dark-mode')) {
                     darkIcon.classList.remove('fa-moon');
@@ -433,7 +442,7 @@
             // 5秒倒计时后自动返回首页
             let seconds = 5;
             const countdownEl = document.getElementById('countdown');
-            let countdownTimer = setInterval(function() {
+            let countdownTimer = setInterval(function () {
                 seconds--;
                 countdownEl.textContent = seconds;
                 if (seconds <= 0) {
@@ -443,7 +452,7 @@
             }, 1000);
 
             // 取消跳转
-            document.getElementById('cancelRedirect').addEventListener('click', function(e) {
+            document.getElementById('cancelRedirect').addEventListener('click', function (e) {
                 e.preventDefault();
                 clearInterval(countdownTimer);
                 this.parentNode.style.display = 'none';
@@ -453,7 +462,7 @@
             const compass = document.getElementById('compass');
             const needle = document.getElementById('compassNeedle');
 
-            document.addEventListener('mousemove', function(e) {
+            document.addEventListener('mousemove', function (e) {
                 const rect = compass.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
@@ -463,4 +472,5 @@
         });
     </script>
 </body>
+
 </html>
