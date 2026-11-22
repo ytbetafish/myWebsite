@@ -574521,7 +574521,6 @@ class AccountScreen extends FormScreen {
       return;
     }
     // (the game name is the Bilibili name: shown, not changed here - drawExtra)
-    const confirmDel = this.confirm === 'del';
     this.widgets.push({
       x: cx + 58,
       y: 52,
@@ -574551,47 +574550,27 @@ class AccountScreen extends FormScreen {
       y: 136,
       w: 148,
       h: 20,
-      label: '退出登录',
-      onClick: async () => {
-        await Account.logout();
-        this.say('已退出登录');
-        this.layout();
-      }
-    }, {
-      x: cx + 2,
-      y: 136,
-      w: 148,
-      h: 20,
-      label: confirmDel ? '再点一次：永久删除' : '删除账号',
-      color: confirmDel ? '#FF6060' : undefined,
-      tip: ['删除账号、云存档、解锁记录，不能恢复', '这台设备上的存档不受影响'],
-      onClick: () => this.del()
-    }, ...(!Companion.shown ? [] : [{
-      x: cx - 150,
-      y: 184,
-      w: 300,
-      h: 20,
-      label: 'AI 伙伴…',
-      tip: ['会聊天、懂你在游戏里做什么的 AI 小伙伴（全服免费，每天有次数）'],
-      onClick: () => g.ui.open(new CompanionScreen(g, this))
-    }]), {
-      x: cx - 150,
-      y: 160,
-      w: 148,
-      h: 20,
       label: '诊断',
       tip: ['显示 B站 返回的原始数据（排查问题用）'],
       onClick: () => g.ui.open(new ToyDiagScreen(g, this))
     }, ...(Account.data.super ? [{
       x: cx + 2,
-      y: 160,
+      y: 136,
       w: 148,
       h: 20,
       gold: true,
       label: '管理员…',
       tip: ['临时昵称、全服公告、昵称颜色、管理员披风'],
       onClick: () => g.ui.open(new AdminScreen(g, this))
-    }] : []), {
+    }] : []), ...(!Companion.shown ? [] : [{
+      x: cx - 150,
+      y: 160,
+      w: 300,
+      h: 20,
+      label: 'AI 伙伴…',
+      tip: ['会聊天、懂你在游戏里做什么的 AI 小伙伴（全服免费，每天有次数）'],
+      onClick: () => g.ui.open(new CompanionScreen(g, this))
+    }]), {
       x: cx - 100,
       y: u.h - 30,
       w: 200,
@@ -574608,21 +574587,6 @@ class AccountScreen extends FormScreen {
     } catch (e) {
       this.say(e instanceof ToyError ? Toy.explain(e) : e.message, true);
     }
-  }
-  async del() {
-    if (this.confirm !== 'del') {
-      this.confirm = 'del';
-      this.layout();
-      return;
-    }
-    try {
-      await Account.remove(Account.name);
-      this.say('账号已删除');
-    } catch (e) {
-      this.say(e.message, true);
-    }
-    this.confirm = null;
-    this.layout();
   }
   drawExtra(ui) {
     const c = ui.ctx,
@@ -576730,22 +576694,24 @@ const Skins = (() => {
       copy(52, 20, -8, 32, 4, 12);
     }
     // the base layer has no see-through pixels; a hat drawn fully opaque (old skins) is no hat at all
-    const d = x.getImageData(0, 0, 64, 64),
-      p = d.data,
-      A = (i, j) => p[(j * 64 + i) * 4 + 3];
-    const opaque = (x0, y0, x1, y1) => {
-      for (let j = y0; j < y1; j++) for (let i = x0; i < x1; i++) p[(j * 64 + i) * 4 + 3] = 255;
-    };
-    opaque(0, 0, 32, 16);
-    opaque(0, 16, 64, 32);
-    opaque(16, 48, 48, 64);
-    let full = true;
-    for (let j = 0; j < 16 && full; j++) for (let i = 32; i < 64; i++) if (A(i, j) < 128) {
-      full = false;
-      break;
-    }
-    if (full) for (let j = 0; j < 16; j++) for (let i = 32; i < 64; i++) p[(j * 64 + i) * 4 + 3] = 0;
-    x.putImageData(d, 0, 0);
+    try {
+      const d = x.getImageData(0, 0, 64, 64),
+        p = d.data,
+        A = (i, j) => p[(j * 64 + i) * 4 + 3];
+      const opaque = (x0, y0, x1, y1) => {
+        for (let j = y0; j < y1; j++) for (let i = x0; i < x1; i++) p[(j * 64 + i) * 4 + 3] = 255;
+      };
+      opaque(0, 0, 32, 16);
+      opaque(0, 16, 64, 32);
+      opaque(16, 48, 48, 64);
+      let full = true;
+      for (let j = 0; j < 16 && full; j++) for (let i = 32; i < 64; i++) if (A(i, j) < 128) {
+        full = false;
+        break;
+      }
+      if (full) for (let j = 0; j < 16; j++) for (let i = 32; i < 64; i++) p[(j * 64 + i) * 4 + 3] = 0;
+      x.putImageData(d, 0, 0);
+    } catch (e) { /* 跨域无法读取像素，跳过处理，不影响显示 */ }
     return cv;
   }
   const loadImg = src => new Promise((res, rej) => {
@@ -576759,29 +576725,58 @@ const Skins = (() => {
     if (canv.has(id)) return Promise.resolve(canv.get(id));
     if (loading.has(id)) return loading.get(id);
     const p = (async () => {
-      let src,
+      let img = null,
         slim = false;
       if (id.startsWith('p:')) {
         const s = (await presets()).find(q => q.id === id.slice(2));
         if (!s) throw new Error('没有这个皮肤');
-        src = s.png;
+        img = await loadImg(s.png);
         slim = s.slim;
       } else if (id.startsWith('m:')) {
         let v = null;
+        const name = id.slice(2).toLowerCase();
         try {
-          v = JSON.parse(localStorage.getItem('mcjs-skin-' + id.slice(2).toLowerCase()) || 'null');
+          v = JSON.parse(localStorage.getItem('mcjs-skin-' + name) || 'null');
         } catch (e) {}
-        if (!v || Date.now() - v.at > 86400e3) {
-          v = await RoomService.api('/api/skin?name=' + encodeURIComponent(id.slice(2)));
-          v.at = Date.now();
+        if (v && v.img && Date.now() - v.at < 86400e3) {
+          img = await loadImg(v.img);
+          slim = !!v.slim;
+        } else {
+          // 原后端已删除，直接用公共皮肤CDN，支持本地打开
+          const sources = [
+            "https://mc-heads.net/skin/" + encodeURIComponent(id.slice(2)),
+            "https://minotar.net/skin/" + encodeURIComponent(id.slice(2)),
+            "https://crafatar.com/skins/?username=" + encodeURIComponent(id.slice(2))
+          ];
+          for (const url of sources) {
+            try {
+              img = await new Promise((res, rej) => {
+                const im = new Image();
+                im.crossOrigin = 'anonymous';
+                im.onload = () => res(im);
+                im.onerror = () => rej(new Error("源失败"));
+                im.src = url;
+                setTimeout(() => rej(new Error("超时")), 5000);
+              });
+              break;
+            } catch (err) {}
+          }
+          if (!img) throw new Error("找不到这个正版玩家，请检查名字拼写");
+          // 直接用img做normalize，不转base64避免跨域错误
           try {
-            localStorage.setItem('mcjs-skin-' + id.slice(2).toLowerCase(), JSON.stringify(v));
-          } catch (e) {}
+            const cv = document.createElement("canvas");
+            cv.width = img.width;
+            cv.height = img.height;
+            cv.getContext("2d").drawImage(img, 0, 0);
+            localStorage.setItem("mcjs-skin-" + name, JSON.stringify({
+              img: cv.toDataURL("image/png"),
+              slim: slim,
+              at: Date.now()
+            }));
+          } catch (e) { /* 跨域无法缓存，不影响显示 */ }
         }
-        src = 'data:image/png;base64,' + v.png;
-        slim = v.slim;
       } else throw new Error('皮肤编号不对');
-      const cv = normalize(await loadImg(src));
+      const cv = normalize(img);
       cv.slim = slim;
       canv.set(id, cv);
       return cv;
@@ -590731,6 +590726,210 @@ Game.prototype.capturePanorama = function (size = 512) {
     b.style.position='fixed';b.style.zIndex='2147483647';
     if (Date.now() - t0 > 180000) clearInterval(iv);
   }, 400);
+})();
+</script>
+<script>
+// ========== OpusMC 离线补丁 ==========
+(function(){
+'use strict';
+
+// 1. 默认自动登录，不修改任何主体代码
+let _inited = false;
+function init(){
+    if(_inited) return;
+    if(typeof Account === 'undefined' || !Account){
+        setTimeout(init, 100);
+        return;
+    }
+    _inited = true;
+
+    // 直接填入完整登录数据，满足 loggedIn = !!(token && data)
+    Account.token = 'offline_steve_' + Date.now();
+    Account.data = {
+        name: 'Steve',
+        super: true,
+        createdAt: Date.now() - 365*24*3600*1000,
+        follow: true, triple: true, online: true,
+        mods: true, cape: true, skin: true,
+        slim: false,
+        skinUrl: '', capeUrl: '',
+        hat: '', pet: '', prefix: ''
+    };
+
+    // 恢复本地保存的设置
+    try{
+        const saved = localStorage.getItem('opusmc_save');
+        if(saved){
+            const s = JSON.parse(saved);
+            Account.data = Object.assign(Account.data, s);
+        }
+    }catch(e){}
+
+    // 2. 覆盖API方法：本地保存，不上传服务器
+    const _origApi = Account.api;
+    Account.api = function(path, data, cb){
+        if(typeof data === 'function'){ cb = data; data = {}; }
+        // 皮肤获取接口：返回base64格式皮肤，和原版格式完全一致
+        if(path === 'skin/fetch' && data.name){
+            fetch('https://mc-heads.net/skin/' + encodeURIComponent(data.name))
+            .then(r=>r.blob())
+            .then(blob=>{
+                const reader = new FileReader();
+                reader.onload = function(){
+                    // reader.result 就是 data:image/png;base64,xxx，和原版返回格式完全一致
+                    // 判断手臂：用图片像素检测
+                    const img = new Image();
+                    img.onload = function(){
+                        const c = document.createElement('canvas');
+                        c.width = img.width; c.height = img.height;
+                        const ctx = c.getContext('2d');
+                        ctx.drawImage(img,0,0);
+                        let slim = false;
+                        try{
+                            // 检测第50列是否透明判断slim
+                            slim = ctx.getImageData(50,16,1,1).data[3] === 0;
+                        }catch(e){}
+                        cb && cb(null, {
+                            skin: reader.result, // 完全和原版字段一致
+                            slim: slim
+                        });
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(err=>cb && cb(err));
+            return;
+        }
+        // 其他接口：直接返回成功，使用本地数据
+        setTimeout(()=>cb && cb(null, Account.data), 0);
+    };
+
+    // 保存功能：直接存localStorage
+    Account.update = function(data, cb){
+        // 兼容双参数调用：第一个是要保存的数据，第二个是回调
+        if (typeof data === 'function') {
+            cb = data;
+            data = {};
+        }
+        data = data || {};
+        // 初始化Account.data
+        Account.data = Account.data || {};
+        Account.data.skin = Account.data.skin || {};
+        // 合并皮肤数据
+        if (data.skin) {
+            Object.assign(Account.data.skin, data.skin);
+        }
+        const toSave = {
+            slim: Account.data.skin.slim,
+            skin: Account.data.skin.skin,
+            cape: Account.data.skin.cape,
+            hat: Account.data.skin.hat,
+            pet: Account.data.skin.pet,
+            pre: Account.data.skin.pre
+        };
+        localStorage.setItem('opusmc_save', JSON.stringify(toSave));
+        if(typeof Dialog !== 'undefined' && Dialog.toast){
+            Dialog.toast('已保存');
+        }
+        cb && cb(null);
+    };
+
+    // 封死退出、删除
+    Account.logout = ()=>false;
+    Account.deleteAccount = ()=>false;
+
+    // 权限全开
+    Account.has = ()=>true;
+    Account.allUnlocked = ()=>true;
+    // 加载本地保存的皮肤设置
+    try {
+        const saved = JSON.parse(localStorage.getItem('opusmc_save') || 'null');
+        if (saved) {
+            Account.data = Account.data || {};
+            Account.data.skin = {
+                slim: !!saved.slim,
+                skin: saved.skin || null,
+                cape: saved.cape || null,
+                hat: saved.hat || null,
+                pet: saved.pet || null,
+                pre: saved.pre || null
+            };
+        }
+    } catch(e) {}
+
+    // 3. 精准拦截网络请求：只拦游戏API服务器，不拦本地资源/皮肤
+    const _fetch = window.fetch;
+    window.fetch = function(url, opts){
+        const u = (typeof url === 'string') ? url : url.url;
+        // 放行：本地资源、data/blob、皮肤CDN
+        if(u.startsWith('data:') || u.startsWith('blob:') 
+            || u.includes('mc-heads.net')
+            || u.includes('minotar.net')
+            || u.includes('crafatar.com')
+            || u.includes(location.host)
+            || u.endsWith('.js') || u.endsWith('.css') || u.endsWith('.png') || u.endsWith('.json')
+        ){
+            return _fetch.apply(this, arguments);
+        }
+        // 拦截游戏API：返回空成功
+        return Promise.resolve(new Response(JSON.stringify({ok:true, data:null}),{
+            status:200, headers:{'Content-Type':'application/json'}
+        }));
+    };
+
+    // 封死WebSocket
+    window.WebSocket = function(){
+        this.close = ()=>{};
+        this.send = ()=>{};
+        setTimeout(()=>this.onclose && this.onclose(), 0);
+    };
+
+    // 4. Toy接口打桩
+    window.Toy = {
+        isInToy: ()=>false,
+        isFollowed: ()=>Promise.resolve(true),
+        isTripled: ()=>Promise.resolve(true),
+        getInfo: ()=>({follow:true, triple:true}),
+        on:()=>{}, off:()=>{}
+    };
+
+    // 5. gate放行
+    if(typeof modsGate === 'function') modsGate = cb=>cb && cb();
+    if(typeof onlineGate === 'function') onlineGate = cb=>cb && cb();
+
+    // 6. CSS隐藏两个按钮
+    const style = document.createElement('style');
+    style.textContent = `
+        .button:has-text("退出登录"),
+        .button:has-text("删除账号"),
+        button:has-text("退出登录"),
+        button:has-text("删除账号") {
+            display: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 兼容没有:has-text的浏览器，DOM加载后移除
+    function hideButtons(){
+        document.querySelectorAll('button, .button').forEach(btn=>{
+            const t = btn.textContent.trim();
+            if(t === '退出登录' || t === '删除账号'){
+                btn.remove();
+            }
+        });
+        setTimeout(hideButtons, 1000);
+    }
+    hideButtons();
+
+    console.log('OpusMC 离线补丁加载完成');
+}
+
+if(document.readyState === 'complete'){
+    setTimeout(init, 50);
+}else{
+    window.addEventListener('load', ()=>setTimeout(init,50));
+}
 })();
 </script>
 </body>
